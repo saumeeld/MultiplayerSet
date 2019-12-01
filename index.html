@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Multiplayer Set</title>
+		<link rel="stylesheet" type="text/css" href="main.css">
+	</head>
+
+	<body>
+		<div class = "container">
+			<h1>Welcome to Set Online</h1>
+
+			<div class = "button" id = "new-game">
+				<form action="/game" method="GET">
+					<input type="submit" value="Start a New Game">
+				</form>
+			</div>
+
+			<div class = "button" id = "join-game">
+				<form id = "join-game-form" action="/game" method="POST">
+					Room Number:
+				    <input id = "room-number" type="text" name="roomNumber"><br>
+					<input type="submit" value="Join Existing Game">
+				</form>
+			</div>		
+		</div>
+	</body>
+
+	<script> 
+		var joinGameForm = document.getElementById("join-game-form");
+
+		joinGameForm.addEventListener('submit', joinGameFormSubmitted);
+
+		var joinGameFormSubmitted = function(event) {
+			localStorage.setItem('roomNumber', document.getElementById('room-number').value);
+		};
+	</script>
+
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "multiplayerset",
+  "version": "1.0.0",
+  "description": "A 2 player game of the Set Card Game",
+  "main": "index.js",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "ejs": "^2.6.1",
+    "express": "^4.16.4",
+    "express-session": "^1.15.6",
+    "express-socket.io-session": "^1.3.5",
+    "socket.io": "^2.2.0"
+  }
+}

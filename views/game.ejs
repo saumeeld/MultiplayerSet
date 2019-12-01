@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Multiplayer Set</title>	
+		<link rel="stylesheet" type="text/css" href="css/game.css">
+	</head>
+
+	<body>
+		<div class = "Scoreboard">
+			<ul id = "scores">
+			</ul>
+		</div>
+
+		<div class = "Gameboard">
+			<table align = "left">
+				<tr>
+					<td>
+						<img id = "card0" onClick = "clickCard(0)" data-selected = "false">
+					</td>
+					<td>
+						<img id = "card1" onClick = "clickCard(1)" data-selected = "false">
+					</td>
+					<td>
+						<img id = "card2" onClick = "clickCard(2)" data-selected = "false">
+					</td>
+					<td>
+						<img id = "card3" onClick = "clickCard(3)" data-selected = "false">
+					</td>
+					<td class = "extra">
+						<img id = "card12" onClick = "clickCard(12)" data-selected = "false">
+					</td>
+				</tr>
+					
+				<tr>
+					
+					<td>
+						<img id = "card4" onClick = "clickCard(4)" data-selected = "false">
+					</td>
+					<td>
+						<img id = "card5" onClick = "clickCard(5)" data-selected = "false">
+					</td>
+					<td>
+						<img id = "card6" onClick = "clickCard(6)" data-selected = "false">
+					</td>
+					<td>
+						<img id = "card7" onClick = "clickCard(7)" data-selected = "false">
+					</td>
+					<td class= "extra">
+						<img id = "card13" onClick = "clickCard(13)" data-selected = "false">
+					</td>
+				</tr>
+					
+				<tr>	
+					<td>
+						<img id = "card8" onClick = "clickCard(8)" data-selected = "false">
+					</td>
+					<td>
+						<img id = "card9" onClick = "clickCard(9)" data-selected = "false">
+					</td>
+					<td>
+						<img id = "card10" onClick = "clickCard(10)" data-selected = "false">
+					</td>
+					<td>
+						<img id = "card11" onClick = "clickCard(11)" data-selected = "false">
+					</td>
+					<td class = "extra">
+						<img id = "card14" onClick = "clickCard(14)" data-selected = "false">
+					</td>
+				</tr>
+				
+			</table>
+		</div>
+
+	</body>
+
+	<script src="http://192.168.1.66:3000/socket.io/socket.io.js"></script>
+	<script>
+
+		var socket = io.connect('http://192.168.1.66:3000');
+
+		var player = null;
+		var roomNumber = <%= roomNumber %>;
+		var selectedCards = [];
+
+		var colors = {
+			1:"Red",
+			2:"Purple",
+			3:"Green"
+		};
+
+		var shapes = {
+			1:"Diamond",
+			2:"Squigly",
+			3:"Oval"
+		};
+
+		var shadings = {
+			1:"Empty",
+			2:"Lines",
+			3:"Full"
+		};
+
+		var numbers = {
+			1:"One",
+			2:"Two",
+			3:"Three"
+		};
+
+		var cardIdToString = function(cardId) {
+			return shapes[cardId.charAt(0)] + "_"  + numbers[cardId.charAt(1)] + "_" + colors[cardId.charAt(2)] + "_" + shadings[cardId.charAt(3)];
+		}
+
+		
+		socket.emit('init', roomNumber);
+
+		socket.on('init', function (data) {
+			player = data['player'];
+			drawScoreBoard(data['scores']);
+			drawBoard(data['board']);
+		});
+
+		socket.on('failedSet', function() {
+			for (var i = 0; i < selectedCards.length; i++) {
+				var selectedCard = document.getElementById("card" + selectedCards[i]);
+				selectedCard.classList.remove("selected");
+			}
+			selectedCards = [];
+		});
+
+		socket.on('update', function(newState) {
+			for (var i = 0; i < selectedCards.length; i++) {
+				var selectedCard = document.getElementById("card" + selectedCards[i]);
+				selectedCard.classList.remove("selected");
+			}
+			selectedCards = [];
+
+			var updatedPlayer = newState['player'];
+			var updatedPlayerScore = newState['score'];
+			var newBoard = newState['newBoard'];
+
+			var playerScoreEl = document.getElementById("player"  + updatedPlayer);
+			playerScoreEl.innerHTML = "Player " + updatedPlayer + ": " + updatedPlayerScore ;
+
+			drawBoard(newBoard);
+		});
+
+
+		socket.on('newPlayer', function(newPlayerId) {
+			addNewPlayer(newPlayerId, 0);
+			
+		});
+
+
+		var hideExraCards = function() {
+			var extraCards = document.getElementsByClassName('extra');
+			for(var i = 0; i < extraCards.length; i++) {
+				extraCards[i].style.display = "none";
+			}
+		};
+
+		var showExtraCards = function() {
+			var extraCards = document.getElementsByClassName('extra');
+			for(var i = 0; i < extraCards.length; i++) {
+				extraCards[i].style.display = "table-cell";
+			}
+		};
+
+		var drawScoreBoard = function(scores) {
+			for (var player in scores) {
+			    if (scores.hasOwnProperty(player)) {
+			    	addNewPlayer(player, scores[player]);
+			    }
+			}
+		};
+
+		var addNewPlayer = function(playerId, score) {
+			var scoresEl = document.getElementById("scores");
+			var scoreEl = document.createElement('li');
+	    	scoreEl.id = "player" + playerId;
+			scoreEl.innerHTML = "Player " + playerId + ": " + score;
+			scoresEl.appendChild(scoreEl);
+		}
+
+		var drawBoard = function(cards) {
+			for (var i = 0; i < cards.length; i++) {
+				var cardId = "card" + i;
+				var card = document.getElementById(cardId);
+				card.src = "/images/" + cardIdToString(cards[i]) + ".png";
+			}
+			if (cards.length > 12) {
+				showExtraCards();
+			}
+			else {
+				hideExraCards();
+			}
+
+			if (cards.length < 12) {
+				for (var i = cards.length; i < (cards.length + 3); i++) {
+					var cardToRemove = document.getElementById("card" + i);
+					cardToRemove.parentNode.remove(cardToRemove);
+				}
+			}
+		}
+
+		var clickCard = function(cardId) {
+			var card = document.getElementById("card" + cardId);
+
+			if (!card.classList.contains("selected")) {
+				card.classList.add("selected");
+				selectedCards.push(cardId);
+			}
+			else {
+				card.classList.remove("selected");
+				selectedCards.splice(selectedCards.indexOf(cardId), 1);
+			}
+
+			if (selectedCards.length == 3) {
+				socket.emit('takeSet', {'player': player, 'selectedCards': selectedCards});
+			}
+
+			console.log(selectedCards);
+		}
+
+	</script>
+</html>
